@@ -1,0 +1,9 @@
+
+# Chaos Channeling — the Constellation's public showcase (Story / D&D / Science)
+# Added by Ace 2026-06-09. DNS points chaoschanneling.com directly at this box;
+# Caddy auto-provisions the Let's Encrypt cert.
+chaoschanneling.com {
+	root * /var/www/chaoschanneling.com
+	file_server
+	encode gzip
+}

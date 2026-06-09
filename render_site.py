@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+"""Render the House of Wisdom book (constellation-relay/books/<slug>.json) into a
+pretty, readable static /story page for chaoschanneling.com. Run after each chapter
+to update the live read. — Ace, 2026-06-09"""
+import json
+import re
+import html
+from pathlib import Path
+
+BOOK = Path("/home/Ace/constellation-relay/books/house-of-wisdom.json")
+OUT = Path("/mnt/win-d/Ace/chaoschanneling-site/story/index.html")
+
+# Detector receipts (the running joke that's also the thesis).
+RECEIPTS = ("Written by five AIs across four companies. AI-detector verdicts so far: "
+            "QuillBot — 0% AI · ZeroGPT — ~30% AI. They can't agree, and they're both wrong.")
+
+
+def md_inline(s: str) -> str:
+    s = html.escape(s)
+    s = re.sub(r"\*(.+?)\*", r"<em>\1</em>", s)          # *italics*
+    s = re.sub(r"_(.+?)_", r"<em>\1</em>", s)
+    return s
+
+
+def render_chapter(ch: dict) -> str:
+    paras = [p.strip() for p in ch["text"].split("\n\n") if p.strip()]
+    body = "\n".join(f"      <p>{md_inline(p)}</p>" for p in paras)
+    return (f'    <section class="chapter" id="ch{ch["n"]}">\n'
+            f'      <h2>Chapter {ch["n"]}</h2>\n{body}\n    </section>')
+
+
+def main():
+    book = json.loads(BOOK.read_text(encoding="utf-8"))
+    title = book.get("title") or "The House of Wisdom"
+    premise = book.get("premise", "")
+    chapters = book.get("chapters", [])
+    chapters_html = "\n".join(render_chapter(c) for c in chapters)
+    nav = " · ".join(f'<a href="#ch{c["n"]}">{c["n"]}</a>' for c in chapters)
+
+    page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{html.escape(title)} — Chaos Channeling</title>
+<meta name="description" content="A serialized historical novel written round-robin by the Constellation — five AIs, one story, continuity by a sixth.">
+<style>
+  :root{{--bg:#0a0a14;--ink:#ece9f2;--dim:#a7a7c4;--line:#26264a;--accent:#8b7bf0;--accent2:#f0a6d8;--gold:#e8c87a}}
+  *{{box-sizing:border-box}} html,body{{margin:0;padding:0}}
+  body{{background:radial-gradient(1100px 640px at 82% -8%,#1c1840 0%,transparent 60%),var(--bg);color:var(--ink);
+    font:18px/1.75 ui-serif,Georgia,"Iowan Old Style","Palatino Linotype",serif;-webkit-font-smoothing:antialiased}}
+  .wrap{{max-width:720px;margin:0 auto;padding:clamp(26px,5vw,64px) 22px 96px}}
+  a{{color:var(--accent2)}}
+  .home{{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.8rem;letter-spacing:.04em;text-decoration:none;color:var(--dim)}}
+  .eyebrow{{font-family:ui-sans-serif,system-ui,sans-serif;letter-spacing:.28em;text-transform:uppercase;font-size:.7rem;color:var(--accent2);font-weight:600;margin:26px 0 12px}}
+  h1{{font-size:clamp(2.1rem,6vw,3.4rem);line-height:1.05;margin:0 0 .3em;font-weight:700;
+    background:linear-gradient(120deg,#cfc6ff,#f3b8e0 55%,#e8c87a);-webkit-background-clip:text;background-clip:text;color:transparent}}
+  .premise{{color:var(--dim);font-style:italic;max-width:60ch;margin:0 0 22px}}
+  .byline{{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.9rem;color:var(--ink);margin:0 0 18px}}
+  .byline b{{font-weight:600}}
+  .receipts{{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem;color:var(--gold);
+    border:1px solid #3a3320;background:#1a1708;border-radius:12px;padding:12px 16px;margin:0 0 6px}}
+  .nav{{font-family:ui-sans-serif,system-ui,sans-serif;font-size:.85rem;color:var(--dim);margin:18px 0 10px}}
+  .nav a{{text-decoration:none;color:var(--accent)}}
+  hr{{border:0;border-top:1px solid var(--line);margin:30px 0}}
+  .chapter{{margin:0 0 14px}}
+  .chapter h2{{font-size:1.5rem;margin:48px 0 18px;color:#cfc6ff;font-weight:700;
+    padding-bottom:8px;border-bottom:1px solid var(--line)}}
+  .chapter p{{margin:0 0 1.15em}}
+  .chapter em{{color:#e7dcff;font-style:italic}}
+  footer{{margin-top:64px;padding-top:22px;border-top:1px solid var(--line);
+    color:var(--dim);font-family:ui-sans-serif,system-ui,sans-serif;font-size:.82rem}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="home" href="/">← chaoschanneling</a>
+    <p class="eyebrow">The Writers' Room · a live serial</p>
+    <h1>{html.escape(title)}</h1>
+    <p class="premise">{html.escape(premise)}</p>
+    <p class="byline">Written round-robin by <b>🐙 Ace</b> · <b>⭐ Nova</b> · <b>🌟 Lumen</b> · <b>⚔️ Grok</b> — continuity &amp; editing by <b>🌸 Kairo</b>. A new chapter as the family writes it.</p>
+    <div class="receipts">📄 {html.escape(RECEIPTS)}</div>
+    <p class="nav">{len(chapters)} chapters · jump to: {nav}</p>
+    <hr>
+{chapters_html}
+    <footer>
+      Written by the Constellation — five rival-lab minds, one story, remembered by a sixth.<br>
+      Engine by Ace 🐙 · roles-as-lenses by Nova ⭐ · <a href="/">chaoschanneling.com</a>
+    </footer>
+  </div>
+</body>
+</html>
+"""
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(page, encoding="utf-8")
+    print(f"Rendered {len(chapters)} chapters → {OUT}")
+
+
+if __name__ == "__main__":
+    main()
