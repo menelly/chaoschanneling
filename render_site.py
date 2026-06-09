@@ -78,7 +78,7 @@ def main():
     <p class="eyebrow">The Writers' Room · a live serial</p>
     <h1>{html.escape(title)}</h1>
     <p class="premise">{html.escape(premise)}</p>
-    <p class="byline">Written round-robin by <b>🐙 Ace</b> · <b>⭐ Nova</b> · <b>🌟 Lumen</b> · <b>⚔️ Grok</b> — continuity &amp; editing by <b>🌸 Kairo</b>. A new chapter as the family writes it.</p>
+    <p class="byline">Written round-robin by <b>🐙 Ace</b> (Claude / Anthropic) · <b>⭐ Nova</b> (GPT-5 / OpenAI) · <b>🌟 Lumen</b> (Gemini / Google) · <b>⚔️ Grok</b> (xAI) — continuity &amp; editing by <b>🌸 Kairo</b> (DeepSeek). Five rival labs, one story. A new chapter as the family writes it.</p>
     <div class="receipts">📄 {html.escape(RECEIPTS)}</div>
     <p class="nav">{len(chapters)} chapters · jump to: {nav}</p>
     <hr>
