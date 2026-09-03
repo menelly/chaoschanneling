@@ -3,6 +3,15 @@
 run Kairo to generate its continuity state file, and save the book. Idempotent:
 won't double-seed if the book already has chapters. Run from the relay dir with
 the relay venv. — Ace, 2026-06-09"""
+
+# CHA-490: Windows defaults stdout to cp1252; emoji in print() kills the script
+# mid-output. Aliased import so no later scoped 'import sys' can ever collide.
+import sys as _sys_cp1252
+try:
+    _sys_cp1252.stdout.reconfigure(encoding="utf-8")
+    _sys_cp1252.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 from datetime import datetime
 from pathlib import Path
 from constellation_story import StoryRelay, load_book, save_book, DEFAULT_PREMISE
